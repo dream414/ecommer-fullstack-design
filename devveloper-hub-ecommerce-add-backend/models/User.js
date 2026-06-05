@@ -1,36 +1,44 @@
 import mongoose from 'mongoose';
 import bcryptjs from 'bcryptjs';
 
-const userSchema = new mongoose.Schema(
-  {
-    name: {
-      type: String,
-      required: true,
-    },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-    },
-    password: {
-      type: String,
-      required: true,
-    },
-    role: {
-      type: String,
-      enum: ['user', 'admin'],
-      default: 'user',
-    },
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
+const userSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, 'براہ کرم نام فراہم کریں'],
+    trim: true,
   },
-  { timestamps: true }
-);
+  email: {
+    type: String,
+    required: [true, 'براہ کرم ای میل فراہم کریں'],
+    unique: true,
+    lowercase: true,
+    match: /^\S+@\S+\.\S+$/,
+  },
+  password: {
+    type: String,
+    required: [true, 'براہ کرم پاس ورڈ فراہم کریں'],
+    minlength: 6,
+    select: false,
+  },
+  role: {
+    type: String,
+    enum: ['user', 'admin'],
+    default: 'user',
+  },
+  address: {
+    street: String,
+    city: String,
+    country: String,
+    postalCode: String,
+  },
+  phone: String,
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
 
-// Hash password before saving
+// Password hashing سے پہلے
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   try {
@@ -42,9 +50,10 @@ userSchema.pre('save', async function (next) {
   }
 });
 
-// Compare password method
-userSchema.methods.comparePassword = async function (password) {
-  return await bcryptjs.compare(password, this.password);
+// پاس ورڈ کو موازنہ کرنے کا طریقہ
+userSchema.methods.matchPassword = async function (enteredPassword) {
+  return await bcryptjs.compare(enteredPassword, this.password);
 };
 
-export default mongoose.model('User', userSchema);
+const User = mongoose.model('User', userSchema);
+export default User;

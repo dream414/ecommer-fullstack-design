@@ -1,16 +1,17 @@
-import express from 'express';
-import { body, validationResult } from 'express-validator';
-import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
+import express from "express";
+import jwt from "jsonwebtoken";
+import { body, validationResult } from "express-validator";
+import User from "../models/User.js";
 
 const router = express.Router();
 
-// Register endpoint
-router.post('/register',
+// REGISTER
+router.post(
+  "/register",
   [
-    body('name').notEmpty().withMessage('نام ضروری ہے'),
-    body('email').isEmail().withMessage('صحیح ای میل داخل کریں'),
-    body('password').isLength({ min: 6 }).withMessage('پاس ورڈ کم از کم 6 حروف ہونے چاہیے'),
+    body("name").notEmpty(),
+    body("email").isEmail(),
+    body("password").isLength({ min: 6 }),
   ],
   async (req, res) => {
     try {
@@ -21,39 +22,32 @@ router.post('/register',
 
       const { name, email, password } = req.body;
 
-      // چیک کریں کہ صارف پہلے سے موجود ہے
-      let user = await User.findOne({ email });
-      if (user) {
-        return res.status(400).json({ error: 'صارف پہلے سے موجود ہے' });
+      const exists = await User.findOne({ email });
+      if (exists) {
+        return res.status(400).json({ message: "User already exists" });
       }
 
-      // نیا صارف بنائیں
-      user = new User({ name, email, password });
-      await user.save();
+      const user = await User.create({ name, email, password });
 
-      // JWT token بنائیں
       const token = jwt.sign(
         { id: user._id, role: user.role },
         process.env.JWT_SECRET,
-        { expiresIn: '7d' }
+        { expiresIn: "7d" }
       );
 
-      res.status(201).json({
-        message: 'رجسٹریشن کامیاب ہے',
-        token,
-        user: { id: user._id, name: user.name, email: user.email },
-      });
+      res.status(201).json({ token, user });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ message: error.message });
     }
   }
 );
 
-// Login endpoint
-router.post('/login',
+// LOGIN
+router.post(
+  "/login",
   [
-    body('email').isEmail().withMessage('صحیح ای میل داخل کریں'),
-    body('password').notEmpty().withMessage('پاس ورڈ ضروری ہے'),
+    body("email").isEmail(),
+    body("password").notEmpty(),
   ],
   async (req, res) => {
     try {
@@ -64,26 +58,35 @@ router.post('/login',
 
       const { email, password } = req.body;
 
-      // صارف تلاش کریں
-      const user = await User.findOne({ email }).select('+password');
-      if (!user || !(await user.matchPassword(password))) {
-        return res.status(401).json({ error: 'غلط ای میل یا پاس ورڈ' });
+      const user = await User.findOne({ email }).select("+password");
+
+      if (!user) {
+        return res.status(401).json({ message: "User not found" });
       }
 
-      // JWT token بنائیں
+      const isMatch = await user.matchPassword(password);
+
+      if (!isMatch) {
+        return res.status(401).json({ message: "Invalid password" });
+      }
+
       const token = jwt.sign(
         { id: user._id, role: user.role },
         process.env.JWT_SECRET,
-        { expiresIn: '7d' }
+        { expiresIn: "7d" }
       );
 
       res.json({
-        message: 'لاگ ان کامیاب ہے',
         token,
-        user: { id: user._id, name: user.name, email: user.email },
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
       });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ message: error.message });
     }
   }
 );

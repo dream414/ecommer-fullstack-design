@@ -1,6 +1,6 @@
 import express from 'express';
 import { body, validationResult } from 'express-validator';
-import { auth } from '../middleware/auth.js';
+import { auth } from '../middleware/authMiddleware.js';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 
@@ -109,5 +109,42 @@ router.put('/:id', auth, async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// آرڈر Delete کریں
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({
+        error: 'آرڈر نہیں ملا'
+      });
+    }
+
+    // صرف آرڈر کا مالک یا admin delete کر سکتا ہے
+    if (
+      req.user.id !== order.user.toString() &&
+      req.user.role !== 'admin'
+    ) {
+      return res.status(403).json({
+        error: 'اختیار نہیں'
+      });
+    }
+
+    await Order.findByIdAndDelete(req.params.id);
+
+    res.json({
+      success: true,
+      message: 'آرڈر کامیابی سے حذف کر دیا گیا'
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      error: error.message
+    });
+  }
+});
+
+
 
 export default router;

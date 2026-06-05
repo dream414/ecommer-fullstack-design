@@ -6,60 +6,107 @@ import {
   FaShoppingCart,
   FaSearch,
 } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
-export default function Header() {
+function Header() {
+  const navigate = useNavigate();
+
+  const handleProfileClick = () => {
+    navigate("/login");
+  };
+
+  const handleOrdersClick = () => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      navigate("/orders");
+    } else {
+      navigate("/login");
+    }
+  };
+
+  const handleMessagesClick = () => {
+    navigate("/products"); // 👈 NEW ROUTE
+  };
+
+  const handleCartClick = () => {
+    navigate("/cart");
+  };
+
   return (
-    <div className="border-b">
-      <div className="container mx-auto flex flex-col md:flex-row items-center justify-between py-3 px-4 md:px-0 gap-3 md:gap-0">
+    <div className="border-b bg-white">
+      <div className="container mx-auto flex flex-col md:flex-row items-center justify-between py-3 px-4 gap-4">
 
-        {/* Brand */}
+        {/* Logo */}
         <div className="flex items-center gap-2">
           <FaShoppingBag className="text-blue-600 text-2xl" />
-          <h1 className="text-2xl font-bold text-blue-600">Brand</h1>
+          <h1 className="text-2xl font-bold text-blue-600">
+            Brand
+          </h1>
         </div>
 
-        {/* Search Bar (Blue Outline) */}
+        {/* Search */}
         <div className="flex w-full md:w-1/2 border-2 border-blue-600 rounded overflow-hidden">
           <input
-            className="flex-1 px-4 py-2 text-sm outline-none"
-            placeholder="Search"
+            type="text"
+            placeholder="Search products..."
+            className="flex-1 px-4 py-2 outline-none"
           />
-          <select className="border-l-2 border-blue-600 px-3 text-sm text-gray-600 outline-none">
+
+          <select className="border-l px-3 outline-none">
             <option>All Categories</option>
             <option>Electronics</option>
             <option>Fashion</option>
             <option>Groceries</option>
           </select>
-          <button className="px-4 bg-blue-600 text-white flex items-center gap-1 text-sm">
+
+          <button className="bg-blue-600 text-white px-4 flex items-center gap-2">
             <FaSearch />
             Search
           </button>
         </div>
 
         {/* Right Icons */}
-        <div className="flex flex-wrap justify-center md:justify-end gap-4 md:gap-6 text-gray-400 text-xs text-center">
-          <div className="flex flex-col items-center">
+        <div className="flex items-center gap-6 text-gray-500">
+
+          <button
+            onClick={handleProfileClick}
+            className="flex flex-col items-center hover:text-blue-600"
+          >
             <FaUser className="text-lg" />
-            <span>Profile</span>
-          </div>
+            <span className="text-xs">Profile</span>
+          </button>
 
-          <div className="flex flex-col items-center">
+          {/* 💬 Messages → Products Section */}
+          <button
+            onClick={handleMessagesClick}
+            className="flex flex-col items-center hover:text-blue-600"
+          >
             <FaEnvelope className="text-lg" />
-            <span>Messages</span>
-          </div>
+            <span className="text-xs">Messages</span>
+          </button>
 
-          <div className="flex flex-col items-center">
+          {/* 📦 Orders */}
+          <button
+            onClick={handleOrdersClick}
+            className="flex flex-col items-center hover:text-blue-600"
+          >
             <FaBox className="text-lg" />
-            <span>Orders</span>
-          </div>
+            <span className="text-xs">Orders</span>
+          </button>
 
-          <div className="flex flex-col items-center">
+          <button
+            onClick={handleCartClick}
+            className="flex flex-col items-center hover:text-blue-600"
+          >
             <FaShoppingCart className="text-lg" />
-            <span>Cart</span>
-          </div>
-        </div>
+            <span className="text-xs">Cart</span>
+          </button>
 
+        </div>
       </div>
     </div>
   );
 }
+
+export default Header;
